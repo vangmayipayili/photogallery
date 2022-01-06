@@ -1,0 +1,25 @@
+form{
+    display:flex; 
+    flex-wrap: wrap; 
+    flex-direction: column;
+}
+input{
+    width: 25%;
+    margin-bottom: 7px;
+    margin-left: auto;
+    margin-right: auto;
+
+}
+input #sub {
+    margin-top: 10px;
+}
+a input{
+    width: fit-content;
+    margin-top: 5px;
+    margin-left: auto;
+    margin-right: auto;
+}
+h1{
+    text-align: center;
+    margin: auto;
+}

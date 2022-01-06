@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block head %}
+
+
+
+{%  endblock %}
+
+<script src=
+"https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js">
+    </script>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/register.css')}}"/>
+<title>Tagged Images</title>
+
+{% block body %}
+<div>
+    <h1 style="text-align: center; margin:auto; margin-top: 15px; margin-bottom: 15px; font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;">Tagged</h1>
+    <div class="container" style="margin-top: 10px;">
+        <div class="row">
+            {% for path in paths %}
+            <div class="col-sm">
+                <div class="card" style="width: 18rem; margin-top: 5px;">
+                    <a href= {{path}}  ><img class="card-img-top" src={{path}} alt="Card image cap"></a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{%  endblock %}

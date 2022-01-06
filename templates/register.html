@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block head %}
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<link rel="stylesheet" href="{{ url_for('static',filename='css/register.css')}}"/>
+<title>Register</title>
+
+{%  endblock %}
+
+{% block body %}
+<h1>Register</h1>
+<form>
+    <input type="email" placeholder="email" name="email" id="email"/>
+    <input type="text" placeholder="name" name="username" id="username"/>
+    <input type="text" placeholder="password" name="password" id="password"/>
+    <input type='button' value="register" id="submitbtn"/>
+</form>
+<div>
+    <h4>Back to Login?</h4>
+    <a href="/login"><button>Login</button></a>
+</div>
+
+<script>
+    $(document).ready(function(){
+        $("input#submitbtn").click(function(){
+            var username=$('input#username').val();
+            var password=$('input#password').val();
+            var email=$('input#email').val()
+            if(username && email && password){
+                $.ajax({url:"http://localhost:5000/register?username="+username+"&password="+password+"&email="+email, type:"POST", success: function(result){
+                    if(result=="True"){
+                        alert("Registered Successfully, Please Login");
+                        window.location.replace("http://localhost:5000/login");
+                    }
+                    else{
+                        alert(result)
+                    }
+                }});
+            }
+            else{
+                alert("Enter all the fields");
+            }
+        });
+    });
+</script>
+{% endblock %}

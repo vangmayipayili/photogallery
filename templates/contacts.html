@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title> Contacts</title>
+<script src=
+"https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js">
+    </script>
+{% endblock %}
+{% block body %}
+<div id="form" style="margin-top: auto;">
+    <h1>CREATE CONTACT</h1>
+
+    <form>
+        <input type="text" placeholder="name" name="name" id="name"/>
+        <input type="number" placeholder="Contact No." name="phone" id="phone"/>
+        <input type="submit" id="submitbtn">
+    </form>
+    <a href="/logout"><button style="margin-top: 10px;">logout</button></a>
+    <h1 style="margin-top: 30px;"> CONTACTS</h1>
+</div>
+<br>
+    <br>
+    <table id="table">
+        
+        
+        
+        <tr>
+            
+            <th>Name</th>
+            <th>Contact</th>
+        </tr>
+        
+        
+    </table>
+
+    <script>
+        $(document).ready(function(){
+            $.ajax({url:"http://127.0.0.1:5000/userinfo" ,success: function(result){
+                $.each(result,function(index){
+                    markup="<tr><td>"+result[index].name+"</td><td>"+result[index].phone+"</td></tr>";
+                    $(table).append(markup);
+                });
+            }});
+            $('input#submitbtn').click(function(){
+                var name=$("input#name").val()
+                var phone=$("input#phone").val()
+                if(name && phone){
+                    $.ajax({url:"http://127.0.0.1:5000/userinfo?name="+name+"&phone="+phone, type:"POST", success: function(result){
+                        alert(result);
+                    }})
+                }
+                else{
+                    alert("Enter Details");
+                }
+            });
+        });
+    </script>
+
+{% endblock %}

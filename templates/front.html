@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title> Login </title>
+<script src=
+"https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js">
+    </script>
+{% endblock %}
+
+{% block body %}
+    <div id="form">
+        <div style="margin-bottom: 15px;">
+            <h1>Login</h1>
+            <input type="text" placeholder="email" name="username" id="username"/>
+            <input type="password" placeholder="password" name="password" id="password"/>
+            <input type="button" id="submitbtn" value="login"/>
+        </div>
+        <div style="margin-top: 15px;">
+            <a href="/register"><button class="button">Not Registerd??</button></a>
+        </div>
+    </div>
+    <script>
+        $(document).ready(function(){
+            
+            $('input#submitbtn').click(function(){
+                var username=$("input#username").val();
+                var password =$("input#password").val();
+                if (username && password){
+                    urll=window.location.origin
+                    $.ajax({url:urll+"/login?username="+username+"&password="+password,type:"POST",success:function(result){
+                        if(result=="True"){
+                            window.location=urll;
+                        }
+                        else{
+                            alert("enter valid credentials");
+                        }
+                    }});
+                }
+                else{
+                    alert("Enter all the details")
+                }
+            });
+        });
+    </script>
+
+{% endblock %} 

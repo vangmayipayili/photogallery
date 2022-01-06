@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<title> Form</title>
+<script src=
+"https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js">
+    </script>
+{% endblock %}
+
+{% block body %}
+
+<div class="tag_form">
+    <h2 style="font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;"> Tag Form</h2>
+    <br/>
+    <br/>
+    <form>
+        <input id="email" type="email" placeholder="enter email of recipient" name="email"/>
+        <input id="submit" type="submit"/>
+    </form>
+    <br/>
+</div>
+
+<script>
+    $(document).ready(function(){
+        $('input#submit').click(function(){
+            email=$('input#email').val();
+            email="{email}"
+            alert(email)
+            if(email){
+                urll = window.location.href; 
+                alert(urll);
+                $.ajax({url: urll+ "&email="+ email, type:"POST", success: function(result){
+                    if(result){
+                        alert(result);
+                        window.location="http://127.0.0.1:5000/upload"
+                    }
+                    else{
+                        alert("somethings wrong")
+                    }
+                }});
+            }
+            else{
+                alert("Enter valid Email address");
+            }
+        });
+    });
+</script>
+{% endblock %}
