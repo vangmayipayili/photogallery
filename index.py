@@ -124,10 +124,7 @@ def upload():
 
 @app.route('/tag',methods=["GET", "POST"])
 def tag():
-    if request.method=="GET":
-        imageid=request.args.get("imageid")
-        return render_template("tagform.html", imageid=imageid)
-    elif request.method=="POST":
+    if request.method=="POST":
         try:
             email=request.args.get("email")
             imageid=request.args.get("imageid")
@@ -136,13 +133,15 @@ def tag():
             if data:
                 cursor.execute(f"insert into taggedimages (user_id, image_id) values ({data['id']}, {imageid})")
                 database.commit()
-                return "Shared successfully"
+                return "True"
             else:
-                return "Enter email of valid user"
+                return "False"
         except Exception as e:
             print(e)
             print(traceback.format_exc())
             return "error"
+    elif request.method=="GET":
+        return render_template("tagform.html")
 
 @app.route('/logout')
 def logout():
@@ -150,4 +149,4 @@ def logout():
     return redirect("/")
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0")
+    app.run()

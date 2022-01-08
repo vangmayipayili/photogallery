@@ -26,11 +26,12 @@
             var username=$('input#username').val();
             var password=$('input#password').val();
             var email=$('input#email').val()
+            urll=window.location.origin
             if(username && email && password){
-                $.ajax({url:"http://localhost:5000/register?username="+username+"&password="+password+"&email="+email, type:"POST", success: function(result){
+                $.ajax({url:urll+"/register?username="+username+"&password="+password+"&email="+email, type:"POST", success: function(result){
                     if(result=="True"){
                         alert("Registered Successfully, Please Login");
-                        window.location.replace("http://localhost:5000/login");
+                        window.location.replace(urll+"/login");
                     }
                     else{
                         alert(result)

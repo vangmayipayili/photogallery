@@ -15,7 +15,7 @@
     <br/>
     <form>
         <input id="email" type="email" placeholder="enter email of recipient" name="email"/>
-        <input id="submit" type="submit"/>
+        <input id="submit" value="submit" type="button"/>
     </form>
     <br/>
 </div>
@@ -24,18 +24,21 @@
     $(document).ready(function(){
         $('input#submit').click(function(){
             email=$('input#email').val();
-            email="{email}"
-            alert(email)
             if(email){
-                urll = window.location.href; 
-                alert(urll);
+                urll = window.location.href;
+                {#new_url=window.location.origin#}
+                {#alert(urll);#}
+                {#alert(new_url);#}
                 $.ajax({url: urll+ "&email="+ email, type:"POST", success: function(result){
-                    if(result){
-                        alert(result);
-                        window.location="http://127.0.0.1:5000/upload"
+                    if(result=="True"){
+                        alert("Shared successfully");
+                        location.replace(window.location.origin+"/upload")
+                    }
+                    else if(result=="False"){
+                        alert("Enter valid email address")
                     }
                     else{
-                        alert("somethings wrong")
+                        alert("something went wrong")
                     }
                 }});
             }
