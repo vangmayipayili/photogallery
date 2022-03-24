@@ -38,9 +38,9 @@ def login_func(email, password):
     if user and user.password == password:
         session['logged_in_user'] = user.id
         session['user_name']=user.name
-        return "True"
+        return True
     else:
-        return "False"
+        return False
 def upload_an_image(image,filename,  des):
     random_num=random.randint(0,1000)
     bucket = 'photogallery-vangmayi'
@@ -67,11 +67,19 @@ def login():
         try:
             email = request.args.get('username')
             password = request.args.get('password')
-            return login_func(email, password)
+            is_loggedin= login_func(email, password)
+            if is_loggedin:
+                return {
+                    "action":"redirect",
+                    "path":"/"
+                }
         except Exception as e:
             print(e)
             print(traceback.format_exc())
-            return "error"
+            return {
+                "action":"alert",
+                "message":str(e)
+                }
     elif request.method == "GET":
         if "logged_in_user" in session and session['logged_in_user']:
             return redirect('/upload')

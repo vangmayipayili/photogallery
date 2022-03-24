@@ -37,11 +37,11 @@
                 if (username && password){
                     urll=window.location.origin
                     $.ajax({url:urll+"/login?username="+username+"&password="+password,type:"POST",success:function(result){
-                        if(result=="True"){
-                            window.location=urll;
+                        if(result.action=="redirect"){
+                            window.location=result.path;
                         }
-                        else{
-                            alert("enter valid credentials");
+                        else if(result.action=="alert"){
+                            alert(result.message);
                         }
                     }});
                 }
