@@ -6,6 +6,11 @@ from werkzeug.utils import secure_filename
 import os
 import boto3
 import random
+import urllib
+import requests
+from datetime import datetime,timedelta
+import base64
+import traceback
 
 
 app = Flask(__name__)
@@ -110,14 +115,6 @@ def upload():
         print(images_list)
         tagged_images_list=ImageModel.fetchtaggedimages(session["logged_in_user"])
         print(tagged_images_list)
-        # pics=dict(db.user.find_one(ObjectId(session['id'])))
-        # tagpaths=[]
-        # if "tagged" in pics.keys():
-        #     tagged=pics["tagged"]
-        #     for tag in tagged:
-        #         image=db.uploads.find_one(ObjectId(tag))
-        #         tagpaths.append(image['route'])
-        #     print(tagpaths)
         return render_template('upload.html', images_list=images_list, tagged_images_list=tagged_images_list, user_name=session["user_name"])
     else:
         return redirect('/')
@@ -143,10 +140,116 @@ def tag():
     elif request.method=="GET":
         return render_template("tagform.html")
 
+
+@app.get('/oauth/twitter')
+def oauth_twitter():
+    code = request.args.get("code")
+    # for authorization(like client secret)
+    auth_string = f'{os.environ["TWT_CLIENT_ID"]}:{os.environ["TWT_CLIENT_SECRET"]}'
+    sample_string_bytes = auth_string.encode("ascii")
+    base64_bytes = base64.b64encode(sample_string_bytes)
+    base64_string = base64_bytes.decode("ascii")
+    headers={
+        "Authorization":'Basic '+ base64_string
+    }
+    params = {
+        "client_id": os.environ["TWT_CLIENT_ID"],
+        "redirect_uri": os.environ["DOMAIN"] + "/oauth/twitter",
+        # "client_secret": os.environ["TWT_CLIENT_SECRET"],
+        "code": code,
+        'grant_type':'authorization_code',
+        'code_verifier':'challenge'
+    }
+
+    url = "https://api.twitter.com/2/oauth2/token"
+    current_time = datetime.now()
+    response = requests.post(url, params, headers=headers)
+    response_data=response.json()
+    if response.status_code != 200:
+        return {
+            "error": response_data
+        }
+    access_token=response_data.get("access_token")
+    provider = "twitter"
+
+    expires_in_seconds=response_data.get("expires_in",0)
+    expires_in_date=current_time+timedelta(seconds=expires_in_seconds)
+    # to epoch time
+    expires_in=datetime.timestamp(expires_in_date)
+    info=OauthModel(user_id=session["logged_in_user"],provider=provider, access_token=access_token, expires_in=expires_in)
+    info.save()
+    return "True"
+
+@app.get('/oauth/fb')
+def oauth_fb():
+    code=request.args.get("code")
+    params={
+        "client_id":os.environ["FB_CLIENT_ID"],
+        "redirect_uri":os.environ["DOMAIN"]+"/oauth/fb",
+        "client_secret":os.environ["FB_CLIENT_SECRET"],
+        "code":code
+    }
+
+    url="https://graph.facebook.com/v12.0/oauth/access_token"
+    response=requests.get(url,params)
+    return "True"
+
+
+@app.route('/images/<imageid>/post-to-twitter',methods=["POST"])
+def post_to_twitter(imageid=None):
+    try:
+        current_date = datetime.now()
+        epoch_time=0
+        expires_in = datetime.fromtimestamp(epoch_time)
+        data=OauthModel.fetchaccesstoken(session['logged_in_user'], "twitter")
+        if data:
+            epoch_time=data.expires_in
+            expires_in=datetime.fromtimestamp( epoch_time )
+            if(expires_in>current_date):
+                sampleimage = open("static/images/img.jpeg", "rb").read()
+                headers={
+                    'Authorization': "Bearer "+ data.access_token,
+                    'Content-Type':'application/x-www-form-urlencoded'
+                }
+                params={
+                    "media": sampleimage,
+                    'media_category':'tweet_image'
+                }
+                url="https://upload.twitter.com/1.1/media/upload.json"
+                response = requests.post(url, headers=headers, params= params)
+                response_data=response.json()
+                return {
+                    "action":"alert",
+                    "message": "Hi "+response_data['data']['name']
+                }
+
+        if(not data or expires_in<current_date):
+            params={
+                "response_type": "code",
+                "client_id":os.environ["TWT_CLIENT_ID"],
+                "redirect_uri":os.environ["DOMAIN"]+"/oauth/twitter",
+                "scope":"tweet.read users.read offline.access",
+                "code_challenge_method": "plain",
+                "code_challenge":"challenge",
+                "state" : "state"
+            }
+            url="https://twitter.com/i/oauth2/authorize?"+urllib.parse.urlencode(params)
+            return {
+                "action":"redirect",
+                "url":url
+            }
+    except Exception as e:
+        print(e)
+        traceback.print_exc()
+        return {
+            "action":"alert",
+            "message": "error occured :"+ str(e)
+        }
+
 @app.route('/logout')
 def logout():
     session['logged_in_user']=None
     return redirect("/")
 
 if __name__ == "__main__":
-    app.run()
+    app.run(host="0.0.0.0", port=80)

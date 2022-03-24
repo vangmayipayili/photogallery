@@ -22,9 +22,6 @@ td{
 }
 tr:hover{background-color: rgb(213, 235, 228);}
 #form{
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 15%;
     text-align: center;
 }
 
@@ -46,3 +43,29 @@ tr:hover{background-color: rgb(213, 235, 228);}
     background-color: cadetblue;
 }
 
+.body_login{
+    background-image: url("https://res.cloudinary.com/hamstech/images/f_auto,q_auto/v1617980773/Hamstech%20App/TITLE-IMAGE10-2/TITLE-IMAGE10-2.jpg?_i=AA");
+    height: 100vh;
+    background-size: cover;
+    background-position: center;
+    margin:0px;
+    padding-top:150px;
+    text-align:center ;
+}
+
+.login_form{
+
+    width:300px;
+    height: 350px;
+    background-color: rgb(41, 39, 39, 0.8);
+    padding: 20px;
+    margin:auto;
+}
+input {
+  text-align: center;
+  border-radius:5px;
+}
+
+::-webkit-input-placeholder {
+  text-align: center;
+}

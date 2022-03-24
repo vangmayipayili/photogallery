@@ -5,21 +5,30 @@
 <script src=
 "https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js">
     </script>
+
+<!-- Load the JS SDK asynchronously -->
+<script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js"></script>
 {% endblock %}
 
 {% block body %}
-    <div id="form">
-        <div style="margin-bottom: 15px;">
-            <h1>Login</h1>
-            <input type="text" placeholder="email" name="username" id="username"/>
-            <input type="password" placeholder="password" name="password" id="password"/>
-            <input type="button" id="submitbtn" value="login"/>
+
+<div class="body_login">
+
+    <div class="login_form" id="form">
+        <h1 style="color: white">Login</h1>
+        <div class="d-flex felx-column justify-content-center" style="padding-top: 10px">
+            <div style="padding: 3px"><input type="text" placeholder="Enter Email" name="username" id="username"/></div>
+            <div style="padding: 3px"><input type="password" placeholder="Enter Password" name="password" id="password"/></div>
+            <div style="padding: 20px"><input style="border-radius: 10px; border-color: white; width:70px" type="button" id="submitbtn" value="Login"/></div>
         </div>
-        <div style="margin-top: 15px;">
-            <a href="/register"><button class="button">Not Registerd??</button></a>
+
+        <div style="margin-top: 35px;">
+            <a href="/register"><button style="border-radius: 10px; color:white; background-color:black; width:120px; border-color:  black" class="button">Register here</button></a>
         </div>
     </div>
+</div>
     <script>
+
         $(document).ready(function(){
             
             $('input#submitbtn').click(function(){
