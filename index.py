@@ -211,6 +211,7 @@ def post_to_twitter(imageid=None):
         expires_in = datetime.fromtimestamp(epoch_time)
         data=OauthModel.fetchaccesstoken(session['logged_in_user'], "twitter")
         if data:
+            print(data.access_token)
             epoch_time=data.expires_in
             expires_in=datetime.fromtimestamp( epoch_time )
             if(expires_in>current_date):
