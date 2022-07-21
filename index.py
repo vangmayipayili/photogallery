@@ -1,3 +1,6 @@
+from requests_oauthlib import OAuth1
+
+import oauth_twitter
 from models import *
 from flask import Flask, render_template, redirect, request, session
 from flask_session import Session
@@ -59,6 +62,31 @@ def upload_an_image(image,filename,  des):
     print('image saved')
     return redirect(request.url)
 
+def upload_media_to_twitter(access_token, access_token_secret):
+    sampleimage = open("static/images/img.jpeg", "rb")
+    media_params = {
+        'media_category': 'tweet_image'
+    }
+    media_upload_url = "https://upload.twitter.com/1.1/media/upload.json"
+    headeroauth = OAuth1(os.environ["TWT_CONSUMER_KEY"],
+                         client_secret=os.environ["TWT_CONSUMER_SECRET"],
+                         resource_owner_key=access_token,
+                         resource_owner_secret=access_token_secret,
+                         signature_type='auth_header')
+    r = requests.post(media_upload_url, auth=headeroauth, params=media_params, files={'media': sampleimage})
+    # after uploading the media its' media id is used to do a sucessful post to twitter
+    if r.status_code == 200:
+        result = r.json()
+        status_params = {
+            "media_ids": result['media_id'],
+            "text": "sample tweet"
+        }
+        status_update_url = 'https://api.twitter.com/1.1/statuses/update.json'
+        r = requests.post(status_update_url, auth=headeroauth, params=status_params)
+        print(r)
+        return True
+    else:
+        raise Exception(r)
 
 @app.route('/', methods=["POST", "GET"])
 @app.route('/login', methods=["POST", "GET"])
@@ -150,43 +178,29 @@ def tag():
 
 
 @app.get('/oauth/twitter')
-def oauth_twitter():
-    code = request.args.get("code")
-    # for authorization(like client secret)
-    auth_string = f'{os.environ["TWT_CLIENT_ID"]}:{os.environ["TWT_CLIENT_SECRET"]}'
-    sample_string_bytes = auth_string.encode("ascii")
-    base64_bytes = base64.b64encode(sample_string_bytes)
-    base64_string = base64_bytes.decode("ascii")
-    headers={
-        "Authorization":'Basic '+ base64_string
-    }
-    params = {
-        "client_id": os.environ["TWT_CLIENT_ID"],
-        "redirect_uri": os.environ["DOMAIN"] + "/oauth/twitter",
-        # "client_secret": os.environ["TWT_CLIENT_SECRET"],
-        "code": code,
-        'grant_type':'authorization_code',
-        'code_verifier':'challenge'
-    }
+def get_access_token_and_post():
+    try:
+        authorization_pin = request.args.get("oauth_verifier")
+        oauth_token=request.args.get("oauth_token")
+        access_token, access_token_secret, user_id, screen_name=oauth_twitter.get_user_access_tokens(oauth_token, session['oauth_token_secret'], authorization_pin)
+        session['oauth_token_secret']=None
+        info=OauthModel(user_id=session["logged_in_user"],provider="twitter", access_token=access_token, access_token_secret=access_token_secret, expires_in=-1)
+        info.save()
+        #posting image to twitter after obtaining access token and secret
+        result=upload_media_to_twitter(access_token, access_token_secret)
+        if result==True:
+            return "post successful"
+        else:
+            return "error occured"
 
-    url = "https://api.twitter.com/2/oauth2/token"
-    current_time = datetime.now()
-    response = requests.post(url, params, headers=headers)
-    response_data=response.json()
-    if response.status_code != 200:
+    except Exception as e:
+        print(e)
+        traceback.print_exc()
         return {
-            "error": response_data
+            "action": "alert",
+            "message": "error occured :" + str(e)
         }
-    access_token=response_data.get("access_token")
-    provider = "twitter"
 
-    expires_in_seconds=response_data.get("expires_in",0)
-    expires_in_date=current_time+timedelta(seconds=expires_in_seconds)
-    # to epoch time
-    expires_in=datetime.timestamp(expires_in_date)
-    info=OauthModel(user_id=session["logged_in_user"],provider=provider, access_token=access_token, expires_in=expires_in)
-    info.save()
-    return "True"
 
 @app.get('/oauth/fb')
 def oauth_fb():
@@ -206,47 +220,31 @@ def oauth_fb():
 @app.route('/images/<imageid>/post-to-twitter',methods=["POST"])
 def post_to_twitter(imageid=None):
     try:
-        current_date = datetime.now()
-        epoch_time=0
-        expires_in = datetime.fromtimestamp(epoch_time)
         data=OauthModel.fetchaccesstoken(session['logged_in_user'], "twitter")
-        if data:
-            print(data.access_token)
-            epoch_time=data.expires_in
-            expires_in=datetime.fromtimestamp( epoch_time )
-            if(expires_in>current_date):
-                sampleimage = open("static/images/img.jpeg", "rb").read()
-                headers={
-                    'Authorization': "Bearer "+ data.access_token,
-                    'Content-Type':'application/x-www-form-urlencoded'
-                }
-                params={
-                    "media": sampleimage,
-                    'media_category':'tweet_image'
-                }
-                url="https://upload.twitter.com/1.1/media/upload.json"
-                response = requests.post(url, headers=headers, params= params)
-                response_data=response.json()
+        if data and data.expires_in==-1:
+            result = upload_media_to_twitter(data.access_token, data.access_token_secret)
+            if result == True:
                 return {
-                    "action":"alert",
-                    "message": "Hi "+response_data['data']['name']
-                }
-
-        if(not data or expires_in<current_date):
-            params={
-                "response_type": "code",
-                "client_id":os.environ["TWT_CLIENT_ID"],
-                "redirect_uri":os.environ["DOMAIN"]+"/oauth/twitter",
-                "scope":"tweet.read users.read offline.access",
-                "code_challenge_method": "plain",
-                "code_challenge":"challenge",
-                "state" : "state"
+                "action":"alert",
+                "message": "post successful"
             }
-            url="https://twitter.com/i/oauth2/authorize?"+urllib.parse.urlencode(params)
+            else:
+                return {
+                "action":"alert",
+                "message": "error occured"
+            }
+
+        # if access token got expired or wasn't evn present
+        if(not data):
+            oauth_token,oauth_token_secret=oauth_twitter.request_token()
+            session['oauth_token_secret']=oauth_token_secret
+            url = f"https://api.twitter.com/oauth/authorize?oauth_token={oauth_token}"
+
             return {
                 "action":"redirect",
                 "url":url
             }
+
     except Exception as e:
         print(e)
         traceback.print_exc()

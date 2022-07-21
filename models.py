@@ -81,11 +81,12 @@ class ImageModel:
                 return result
 
 class OauthModel:
-    def __init__(self, id =None, user_id=None, provider=None, access_token=None, expires_in=None):
+    def __init__(self, id =None, user_id=None, provider=None, access_token=None, access_token_secret=None, expires_in=None):
         self.id=id
         self.user_id=user_id
         self.provider=provider
         self.access_token=access_token
+        self.access_token_secret=access_token_secret
         self.expires_in=expires_in
 
     def save(self):
@@ -94,10 +95,10 @@ class OauthModel:
                 cursor.execute('select * from oauth where user_id=%s and provider=%s', (self.user_id, self.provider))
                 data = cursor.fetchall()
                 if data:
-                    query=f"update oauth set access_token='{self.access_token}', expires_in={self.expires_in} where user_id={self.user_id}"
+                    query=f"update oauth set access_token='{self.access_token}', access_token_secret='{self.access_token_secret}', expires_in={self.expires_in} where user_id={self.user_id}"
                     cursor.execute(query)
                 else:
-                    query=f'insert into oauth (user_id, provider, access_token, expires_in) VALUES ({self.user_id},"{self.provider}","{self.access_token}",{self.expires_in})'
+                    query=f'insert into oauth (user_id, provider, access_token, access_token_secret, expires_in) VALUES ({self.user_id},"{self.provider}","{self.access_token}", "{self.access_token_secret}", {self.expires_in})'
                     cursor.execute(query)
             connection.commit()
     @staticmethod
@@ -108,4 +109,4 @@ class OauthModel:
                 cursor.execute(query)
                 data=cursor.fetchone()
                 if data:
-                    return OauthModel(id=data['id'], user_id=data['user_id'], provider=data['provider'], access_token=data['access_token'], expires_in=data['expires_in'])
+                    return OauthModel(id=data['id'], user_id=data['user_id'], provider=data['provider'], access_token=data['access_token'], access_token_secret=data['access_token_secret'], expires_in=data['expires_in'])
